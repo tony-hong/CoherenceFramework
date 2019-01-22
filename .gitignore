@@ -29,7 +29,8 @@ $RECYCLE.BIN/
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -46,3 +47,9 @@ Temporary Items
 .apdisk
 /target/
 /bin/
+*.txt
+*.unigrams
+*.bigrams
+*.ptb_grid
+*.ptb
+PKG-INFO
