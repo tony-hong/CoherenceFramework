@@ -22,6 +22,16 @@ from discourse.util import smart_open, read_documents
 from collections import defaultdict
 
 nouns = ['NNP', 'NP','NNS','NN','N','NE']
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet as wn
+
+wnl = WordNetLemmatizer()
+
+def get_POS(pos_tb):
+    first_lower = pos_tb[0].lower()
+    if first_lower not in ['v', 'n', 'a', 'r']:
+        return 'n'
+    return first_lower
 
 ''' csubj,  
     csubjpass, {xsubj}: controlling subject}, 
@@ -50,37 +60,53 @@ def main(args):
     try:
         #for ipath in enumerate(ipaths): 
         #with gzip.open(input_path, 'rb') as fi:
-        with open(args.directory, 'rb' ) as fi:
-            #with gzip.open(input_path+'_grid' + '.gz', 'wb') as fo:
-            with open(args.directory+'_grid', 'w') as fo:
-                entities, sentences = extract_grids(fi)
-                grid = construct_grid(entities, sentences)
-                output_grid(grid, fo) 
+
+        #with gzip.open(input_path+'_grid' + '.gz', 'wb') as fo:
+
+        with open(args.directory, 'rb' ) as fi, \
+         open(args.directory+'_grid', 'w') as fo:
+            text_idx = 0
+            grids = []
+            for lines, attrs in iterdoctext(fi):
+                logging.debug('document %s', attrs['id'])
+                print ' extract '+str(len(lines))+' lines'
+
+                print >> fo, "# docid=" + attrs['id']
+
+                entities, sent_num = extract_grids(lines)
+                print entities
+                
+                grid = construct_grid(entities, sent_num)
+                grids.append(grid)
+                print grid
+
+                output_grid(grid, fo)
                 #writedoctext(fo, grid , id=attrs['id'])
+                text_idx+=1
             logging.info('done: %s', args.directory)
     except:
         raise Exception(''.join(traceback.format_exception(*sys.exc_info())))       
             
-def extract_grids(fi):
+def extract_grids(lines):
     """ Identify entities from ptb trees for document. store in dictionary for grid construction. """
-    idx = 0
+
     entities = defaultdict(lambda : defaultdict(dict))
     #print 'fi='+fi
-    for lines, attrs in iterdoctext(fi):
-        logging.debug('document %s', attrs['docid'])
-        print ' extract '+str(len(lines))+' lines'
-        #for line in lines:
-        entities, idx =  (convert_tree(line, entities) for line in lines)
+
+    sent_idx = 0
+    for line in lines:
+        entities, tokens = convert_tree(line, entities, sent_idx)
+        sent_idx+=1
         
-    return entities, idx        
+    return entities, sent_idx
                 
             
         
 #from dependencies extract nouns with their grammatical dependencies in given sentence
-def convert_tree(line, entities):
+def convert_tree(line, entities, sent_id):
     print ' convert_tree with '+line
     sd = StanfordDependencies.get_instance(
-            jar_filename='C:\SMT\StanfordNLP\stanford-corenlp-full-2013-11-12\stanford-corenlp-full-2013-11-12\stanford-corenlp-3.3.0.jar',
+            jar_filename='/Users/tonyhong/ROOT/coli/stanford/stanford-corenlp-full-2018-10-05/stanford-corenlp-3.9.2.jar',
             backend='subprocess')
     
     #ex='(ROOT(S(NP (PRP$ My) (NN dog))(ADVP (RB also))(VP (VBZ likes)(S(VP (VBG eating)(NP (NN sausage)))))(. .)))'
@@ -89,7 +115,7 @@ def convert_tree(line, entities):
     idx = 0
     #returns a list of sentences (list of list of Token objects) 
     dependencies = sd.convert_tree(line, debug=True)
-    
+
     for token in dependencies:
         print token
         if token.pos in nouns :
@@ -102,43 +128,54 @@ def convert_tree(line, entities):
             else:
                 grammatical_role = 'X'
             
+            # print token.form
+            token_lemma = wnl.lemmatize(token.form, get_POS(token.pos))
+            print token.form, token_lemma
             ''' if this entity has already occurred in the sentence, store the reference with highest grammatical role , 
             judged here  as S > O > X '''
-            if token.lemma in entities and  entities[token.lemma][idx] :
-                print str(entities[token.lemma][idx]) + ' comparing to '+str(r2i[grammatical_role])
-                if (entities[token.lemma][idx]) < r2i[grammatical_role]:
-                    entities[token.lemma][idx] = r2i[grammatical_role]
+            if token_lemma in entities and entities[token_lemma][sent_id] :
+                print str(entities[token_lemma][sent_id]) + ' comparing to '+str(r2i[grammatical_role])
+                if (entities[token_lemma][sent_id]) < r2i[grammatical_role]:
+                    entities[token_lemma][sent_id] = r2i[grammatical_role]
             else:
-                entities[token.lemma][idx] = r2i[grammatical_role]
+                entities[token_lemma][sent_id] = r2i[grammatical_role]
             ''' entity->list of : sentence_number->grammatical_role'''
-    idx +=1
+        idx +=1
+
+    # print entities
     return entities, idx
     
 def construct_grid(entities, sentences):
     """ #construct grid from dictionary, rows are sentences, cols are entities """
     print 'size='+str(len(entities))
-    grid = np.zeros(sentences, entities)
+    y = len(entities)
+    print (sentences, y)
+
+    grid = np.zeros((sentences, y))
     entity_idx = 0
-    for entity in entities.keys:
+    for entity in entities.keys():
         occurances = entities[entity]
         for sentence in occurances :
-            grid [sentence][entity_idx] = occurances[sentence] 
-            entity_idx+=1
+            grid[sentence][entity_idx] = occurances[sentence] 
+        entity_idx+=1
+    
+    # print grid
     return grid
 
-def output_grid(grids, ostream):
+def output_grid(grid, ostream):
     """ output grid  """
-    
-    for grid in grids:
-        #print >> ostream, '# %s' % attr_str
-        for i in enumerate( grid) :
-            for j in enumerate (grid[i]): #each char representing entity
-                    if grid[i][j] == 0:
-                        print >> ostream, '-'
-                    else:
-                        print >> ostream, grid[i][j]
-            print >> ostream,  '\n'
-        print >> ostream,  '\n'
+    output = ''
+
+    #print >> ostream, '# %s' % attr_str
+    for i in range(grid.shape[0]):
+        for j in range(grid.shape[1]): #each char representing entity
+            if grid[i][j] == 0:
+                output += '-'
+            else:
+                output += i2r[grid[i][j]]
+        output += '\n'
+    output += '\n'
+    print >> ostream, output
             
 def parse_args():
     """parse command line arguments"""
