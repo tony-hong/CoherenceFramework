@@ -114,10 +114,14 @@ def main(args):
     test = read_grids(args.input, r2i)
     logging.info('Scoring %d documents', len(test)) 
     print >> args.output, '#docid\t#loglikelihood'
+    sum_ll = 0
     for i, grid in enumerate(test):
         ll = grid_loglikelihood(grid, U, B, args.salience)
+        # print >> args.output, '{0}\t{1}'.format(i, ll)
+        sum_ll += ll
         print >> args.output, '{0}\t{1}'.format(i, ll)
-            
+    print >> args.output, '{0}\t{1}'.format("#Sum: ", sum_ll)
+
 
 @command('grid_decoder', 'entity-based')
 def argparser(parser=None, func=main):
