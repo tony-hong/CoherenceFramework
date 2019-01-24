@@ -72,6 +72,7 @@ def main(args):
                 print ' extract '+str(len(lines))+' lines'
 
                 print >> fo, "# docid=" + attrs['id']
+                print >> fo, "# id=" + text_idx
 
                 entities, sent_num = extract_grids(lines)
                 print entities
