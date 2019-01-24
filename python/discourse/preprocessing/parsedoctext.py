@@ -132,20 +132,20 @@ def argparser(parser=None, func=main):
             type=int, default=150,
             help='maximum sentence length (necessary to prevent Stanford from crashing)')
     parser.add_argument('--jobs', '-j', type=int, default=4,
-            help='number of jobs (documents in parallel)')
-    parser.add_argument('--mem', type=int, default=10,
-            help='memory (in G) for each instance of the stanford parser')
-    parser.add_argument('--threads', type=int, default=4,
-            help='nuber of threads for each instance of the stanford parser')
-    parser.add_argument('--parser', type=str, 
-            default='/home/waziz/tools/stanford/stanford-parser-full-2014-10-31/stanford-parser.jar',
-            help='Path to Stanford parser (jar)')
-    parser.add_argument('--models', type=str, 
-            default='/home/waziz/tools/stanford/stanford-parser-full-2014-10-31/stanford-parser-3.5.0-models.jar',
-            help='Path to Stanford parser models (jar)')
-    parser.add_argument('--grammar', type=str, 
-            default='/home/waziz/tools/stanford/stanford-parser-full-2014-10-31/englishPCFG.ser.gz',
-            help='Path to Stanford gramar (gz)')
+             help='number of jobs (documents in parallel)')
+     parser.add_argument('--mem', type=int, default=10,
+             help='memory (in G) for each instance of the stanford parser')
+     parser.add_argument('--threads', type=int, default=10,
+             help='nuber of threads for each instance of the stanford parser')
+     parser.add_argument('--parser', type=str, 
+             default='/root/xhong/stanford/stanford-parser-full-2018-10-17/stanford-parser.jar',
+             help='Path to Stanford parser (jar)')
+     parser.add_argument('--models', type=str, 
+             default='/root/xhong/stanford/stanford-parser-full-2018-10-17/stanford-parser-3.9.2-models.jar',
+             help='Path to Stanford parser models (jar)')
+     parser.add_argument('--grammar', type=str, 
+             default='/root/xhong/stanford/stanford-parser-full-2018-10-17/englishPCFG.ser.gz',
+             help='Path to Stanford gramar (gz)')
 
     if func is not None:
         parser.set_defaults(func=func)

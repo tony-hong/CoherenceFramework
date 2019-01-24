@@ -106,7 +106,7 @@ def extract_grids(lines):
 def convert_tree(line, entities, sent_id):
     print ' convert_tree with '+line
     sd = StanfordDependencies.get_instance(
-            jar_filename='/Users/tonyhong/ROOT/coli/stanford/stanford-corenlp-full-2018-10-05/stanford-corenlp-3.9.2.jar',
+            jar_filename='/root/xhong/stanford/stanford-corenlp-full-2018-10-05/stanford-corenlp-3.9.2.jar',
             backend='subprocess')
     
     #ex='(ROOT(S(NP (PRP$ My) (NN dog))(ADVP (RB also))(VP (VBZ likes)(S(VP (VBG eating)(NP (NN sausage)))))(. .)))'
