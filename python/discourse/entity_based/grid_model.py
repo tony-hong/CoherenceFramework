@@ -21,7 +21,6 @@ from discourse.doctext import iterdoctext, writedoctext
 from discourse.util import smart_open, read_documents
 from collections import defaultdict
 
-nouns = ['NNP', 'NP','NNS','NN','N','NE']
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import wordnet as wn
 
@@ -32,6 +31,10 @@ def get_POS(pos_tb):
     if first_lower not in ['v', 'n', 'a', 'r']:
         return 'n'
     return first_lower
+
+# nouns = ['NNP', 'NP','NNS','NN','N','NE']
+# a hack to include pronouns
+nouns = ['NNP', 'NP','NNS','NN','N','NE', 'PRP', 'FW']
 
 ''' csubj,  
     csubjpass, {xsubj}: controlling subject}, 
